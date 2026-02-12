@@ -1,0 +1,11 @@
+{
+  "project_name": "My Project",
+  "repo_path": "/path/to/repo",
+  "channels": {
+    "roadmap": "dev-roadmap",
+    "releases": "dev-releases",
+    "changelog": "dev-changelog",
+    "stats": "coding-stats"
+  },
+  "_note": "SLACK_BOT_TOKEN must be set as environment variable"
+}
