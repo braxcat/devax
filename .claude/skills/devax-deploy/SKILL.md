@@ -20,9 +20,16 @@ Read the project's `CLAUDE.md` to find:
 
 If CLAUDE.md doesn't have a Deployment section, ask the user for the GCP project ID.
 
-### 2. Pre-deploy check
+### 2. Pre-deploy checks
 
-Run `npm run build` (or the project's build command) to verify the build passes before deploying. If it fails, stop and fix the issue.
+Run tests and build to verify everything passes before deploying. If either fails, stop and fix the issue.
+
+```bash
+npm test           # Skip with --skip-tests flag
+npm run build
+```
+
+If the user passed `--skip-tests`, skip `npm test` but still run the build.
 
 ### 3. Deploy
 
@@ -95,6 +102,18 @@ After a successful deploy, update these docs in `claude_docs/`:
 #### WORKLOG.md
 - Add a deploy session entry with today's date
 - Note what was deployed and which docs were updated
+
+### 4b. Update user docs (optional)
+
+Check if `src/content/docs/` exists in the project.
+
+If yes, ask: "Update user documentation? (y/n/skip)"
+- **y:** Run `/devax-update-user-docs` to detect and update affected docs
+- **n/skip:** Continue to step 5
+
+If `src/content/docs/` does not exist, skip silently.
+
+Only offer this step after a successful build/deploy.
 
 ### 5. Post to Slack
 

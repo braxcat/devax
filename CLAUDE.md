@@ -54,6 +54,8 @@ To install Devax in a container environment:
 | `/devax-publish` | Publish sanitized devax to public repo |
 | `/devax-code-review` | Comprehensive code review (8 quality + 4 security categories) |
 | `/devax-stats` | Project statistics and dev metrics (codebase, git, time estimate) |
+| `/devax-test-scaffold` | Set up Vitest + RTL test infrastructure in a Next.js project |
+| `/devax-test-create` | Generate tests for existing code (tier1/tier2/tier3 or specific files) |
 
 <!-- BUSINESS:START -->
 ### Business Skills (Bosun)
