@@ -35,6 +35,7 @@ All skills here are hand-written for this workspace — none are downloaded from
 | `/devax-publish` | Publish sanitized devax to public repo | `scripts/publish.sh` |
 | `/devax-code-review` | Comprehensive code review (8 quality + 4 security categories) | Inline analysis → `claude_docs/CODE-REVIEW.md` |
 | `/devax-stats` | Project statistics and dev metrics (codebase, git, time estimate) | Inline analysis + optional `scripts/dev-time-report.sh` |
+| `/devax-update-user-docs` | Update user documentation (MDX) based on code changes | Reads feature registry + git diff → updates `src/content/docs/` |
 
 <!-- BUSINESS:START -->
 ### Business (Bosun)

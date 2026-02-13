@@ -49,6 +49,16 @@ Analyze recent changes and update `claude_docs/`:
 
 If nothing meaningful was found in the git log, say so and move to step 3.
 
+### 2d. Update user docs (optional)
+
+If `src/content/docs/` exists and feature source files changed (check `git diff --name-only` for files under `src/app/`, `src/components/`, `src/lib/`):
+
+Ask: "Feature code changed — update user docs? (y/n)"
+- **y:** Run `/devax-update-user-docs` to detect and update affected MDX docs
+- **n:** Skip
+
+If `src/content/docs/` does not exist, skip silently.
+
 ### 3. Commit all outstanding changes
 
 Run `git status` and show the user what's uncommitted (both code and doc changes).
