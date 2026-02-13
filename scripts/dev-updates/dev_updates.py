@@ -107,7 +107,8 @@ def get_channel_names(config):
 def cmd_roadmap(args, config):
     repo = get_repo_path(args, config)
     project = get_project_name(args, config)
-    data = parse_roadmap(repo)
+    docs_path = config.get("docs_path", "claude_docs")
+    data = parse_roadmap(repo, docs_path=docs_path)
 
     if args.json:
         print(json.dumps(data, indent=2))
@@ -131,11 +132,12 @@ def cmd_roadmap(args, config):
 def cmd_release(args, config):
     repo = get_repo_path(args, config)
     project = get_project_name(args, config)
-    changelog_data = parse_changelog(repo, latest_only=True)
+    docs_path = config.get("docs_path", "claude_docs")
+    changelog_data = parse_changelog(repo, latest_only=True, docs_path=docs_path)
 
     features_data = None
     try:
-        features_data = parse_features(repo)
+        features_data = parse_features(repo, docs_path=docs_path)
     except FileNotFoundError:
         pass
 
@@ -164,7 +166,8 @@ def cmd_release(args, config):
 def cmd_changelog(args, config):
     repo = get_repo_path(args, config)
     project = get_project_name(args, config)
-    data = parse_changelog(repo)
+    docs_path = config.get("docs_path", "claude_docs")
+    data = parse_changelog(repo, docs_path=docs_path)
 
     if args.json:
         print(json.dumps(data, indent=2))
@@ -277,6 +280,7 @@ def cmd_replay(args, config):
     """Post full historical timeline to channels."""
     repo = get_repo_path(args, config)
     project = get_project_name(args, config)
+    docs_path = config.get("docs_path", "claude_docs")
     replay_type = args.type or "all"
     ch_names = get_channel_names(config)
 
@@ -298,7 +302,7 @@ def cmd_replay(args, config):
     # ── Roadmap replay: one post per shipping date ──
     if replay_type in ("all", "roadmap"):
         print("\n=== Roadmap Replay ===")
-        snapshots = parse_roadmap_snapshots(repo)
+        snapshots = parse_roadmap_snapshots(repo, docs_path=docs_path)
         for i, snap in enumerate(snapshots):
             data = {
                 "phases": snap["phases"],
@@ -327,13 +331,13 @@ def cmd_replay(args, config):
     # ── Release replay: one post per phase (reversed to oldest first) ──
     if replay_type in ("all", "release"):
         print("\n=== Release Replay ===")
-        changelog_data = parse_changelog(repo)
+        changelog_data = parse_changelog(repo, docs_path=docs_path)
         # Reverse so oldest phase is first
         all_phases = list(reversed(changelog_data["phases"]))
 
         features_data = None
         try:
-            features_data = parse_features(repo)
+            features_data = parse_features(repo, docs_path=docs_path)
         except FileNotFoundError:
             pass
 
@@ -358,7 +362,7 @@ def cmd_replay(args, config):
     # ── Changelog replay: one post per phase (reversed to oldest first) ──
     if replay_type in ("all", "changelog"):
         print("\n=== Changelog Replay ===")
-        changelog_data = parse_changelog(repo)
+        changelog_data = parse_changelog(repo, docs_path=docs_path)
         all_phases = list(reversed(changelog_data["phases"]))
 
         for i, phase in enumerate(all_phases):

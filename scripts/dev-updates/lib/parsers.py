@@ -28,9 +28,9 @@ def format_date(date_str):
         return date_str
 
 
-def _parse_roadmap_phases(repo_path):
+def _parse_roadmap_phases(repo_path, docs_path="claude_docs"):
     """Parse the Phase Summary table from ROADMAP.md. Returns list of phase dicts."""
-    filepath = os.path.join(repo_path, "claude_docs", "ROADMAP.md")
+    filepath = os.path.join(repo_path, docs_path, "ROADMAP.md")
     with open(filepath, "r") as f:
         content = f.read()
 
@@ -54,7 +54,7 @@ def _parse_roadmap_phases(repo_path):
     return phases
 
 
-def parse_roadmap(repo_path):
+def parse_roadmap(repo_path, docs_path="claude_docs"):
     """Parse docs/ROADMAP.md Phase Summary table.
 
     Returns:
@@ -66,7 +66,7 @@ def parse_roadmap(repo_path):
             "date": str  # today in friendly format
         }
     """
-    phases = _parse_roadmap_phases(repo_path)
+    phases = _parse_roadmap_phases(repo_path, docs_path)
 
     completed = [p for p in phases if p["status"] == "COMPLETE"]
     next_planned = None
@@ -84,7 +84,7 @@ def parse_roadmap(repo_path):
     }
 
 
-def parse_roadmap_snapshots(repo_path):
+def parse_roadmap_snapshots(repo_path, docs_path="claude_docs"):
     """Build cumulative roadmap snapshots grouped by shipping date.
 
     Returns list of snapshots, oldest first:
@@ -100,7 +100,7 @@ def parse_roadmap_snapshots(repo_path):
         }
     ]
     """
-    all_phases = _parse_roadmap_phases(repo_path)
+    all_phases = _parse_roadmap_phases(repo_path, docs_path)
     total = len(all_phases)
 
     # Group completed phases by date
@@ -148,7 +148,7 @@ def parse_roadmap_snapshots(repo_path):
     return snapshots
 
 
-def parse_changelog(repo_path, latest_only=False):
+def parse_changelog(repo_path, latest_only=False, docs_path="claude_docs"):
     """Parse CHANGELOG.md into structured phase entries.
 
     Returns:
@@ -162,7 +162,7 @@ def parse_changelog(repo_path, latest_only=False):
             ]
         }
     """
-    filepath = os.path.join(repo_path, "claude_docs", "CHANGELOG.md")
+    filepath = os.path.join(repo_path, docs_path, "CHANGELOG.md")
     with open(filepath, "r") as f:
         content = f.read()
 
@@ -209,7 +209,7 @@ def parse_changelog(repo_path, latest_only=False):
     return {"phases": phases}
 
 
-def parse_features(repo_path):
+def parse_features(repo_path, docs_path="claude_docs"):
     """Parse docs/FEATURES.md into section summaries.
 
     Returns:
@@ -219,7 +219,7 @@ def parse_features(repo_path):
             "coming_soon": [{"name": str, "description": str}]
         }
     """
-    filepath = os.path.join(repo_path, "claude_docs", "FEATURES.md")
+    filepath = os.path.join(repo_path, docs_path, "FEATURES.md")
     with open(filepath, "r") as f:
         content = f.read()
 
