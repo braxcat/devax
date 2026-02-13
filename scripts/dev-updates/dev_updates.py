@@ -7,7 +7,8 @@ Usage:
   python3 dev_updates.py release [--dry-run]       Post latest release
   python3 dev_updates.py changelog [--dry-run]     Post latest changelog
   python3 dev_updates.py stats [--dry-run]         Post coding stats
-  python3 dev_updates.py all [--dry-run]           Post all four
+  python3 dev_updates.py confluence [--dry-run]    Post Confluence sync status
+  python3 dev_updates.py all [--dry-run]           Post all (incl. confluence if configured)
   python3 dev_updates.py replay [--dry-run]        Post full history (all phases)
   python3 dev_updates.py delete-last N             Delete last N bot messages
   python3 dev_updates.py setup-channels            Create channels (one-time)
@@ -32,8 +33,8 @@ import time
 # Add parent to path for lib imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib.parsers import parse_roadmap, parse_roadmap_snapshots, parse_changelog, parse_features
-from lib.formatters import build_roadmap_blocks, build_release_blocks, build_changelog_blocks
+from lib.parsers import parse_roadmap, parse_roadmap_snapshots, parse_changelog, parse_features, parse_confluence_status
+from lib.formatters import build_roadmap_blocks, build_release_blocks, build_changelog_blocks, build_confluence_blocks
 from lib.slack_client import _get_token, ensure_channels, post_message, delete_bot_messages, delete_all_bot_messages
 from lib.stats.git_collector import collect_daily_stats, collect_multi_repo_daily_stats
 from lib.stats.charts import build_all_charts, build_daily_charts
@@ -92,12 +93,15 @@ def get_project_name(args, config):
 def get_channel_names(config):
     """Get channel names from config or defaults."""
     channels = config.get("channels", {})
-    return {
+    result = {
         "roadmap": channels.get("roadmap", "dev-roadmap"),
         "releases": channels.get("releases", "dev-releases"),
         "changelog": channels.get("changelog", "dev-changelog"),
         "stats": channels.get("stats", "coding-stats"),
     }
+    if "confluence" in channels:
+        result["confluence"] = channels["confluence"]
+    return result
 
 
 def cmd_roadmap(args, config):
@@ -187,11 +191,12 @@ def cmd_stats(args, config):
     project = get_project_name(args, config)
     ch_names = get_channel_names(config)
     no_charts = getattr(args, "no_charts", False)
+    exclude_paths = config.get("stats_exclude_paths", [])
 
     if len(repos) > 1:
-        daily = collect_multi_repo_daily_stats(repos, project)
+        daily = collect_multi_repo_daily_stats(repos, project, exclude_paths=exclude_paths)
     else:
-        daily = collect_daily_stats(repos[0]["path"], project)
+        daily = collect_daily_stats(repos[0]["path"], project, exclude_paths=exclude_paths)
     if not daily:
         print("No git history found")
         return
@@ -218,15 +223,54 @@ def cmd_stats(args, config):
     print(f"Posted stats to #{ch_names['stats']}")
 
 
+def cmd_confluence(args, config):
+    """Post Confluence sync status."""
+    repo = get_repo_path(args, config)
+    project = get_project_name(args, config)
+    ch_names = get_channel_names(config)
+
+    if "confluence" not in ch_names:
+        print("No confluence channel configured — skipping")
+        return
+
+    data = parse_confluence_status(repo)
+
+    if args.json:
+        print(json.dumps(data, indent=2))
+        return
+
+    blocks = build_confluence_blocks(data, project, context=args.context)
+
+    if args.dry_run:
+        print(json.dumps(blocks, indent=2))
+        print(f"\n--- Would post to #{ch_names['confluence']} ---")
+        return
+
+    token = _get_token()
+    channels = ensure_channels(token, [ch_names["confluence"]])
+    ch_id = channels[ch_names["confluence"]]
+    post_message(token, ch_id, blocks, text=f"{project} Confluence Status")
+    print(f"Posted confluence status to #{ch_names['confluence']}")
+
+
 def cmd_all(args, config):
-    print("=== Roadmap ===")
-    cmd_roadmap(args, config)
-    print("\n=== Release ===")
-    cmd_release(args, config)
-    print("\n=== Changelog ===")
-    cmd_changelog(args, config)
-    print("\n=== Stats ===")
-    cmd_stats(args, config)
+    steps = [
+        ("Roadmap", cmd_roadmap),
+        ("Release", cmd_release),
+        ("Changelog", cmd_changelog),
+        ("Stats", cmd_stats),
+    ]
+    ch_names = get_channel_names(config)
+    if "confluence" in ch_names:
+        steps.append(("Confluence", cmd_confluence))
+
+    for name, func in steps:
+        print(f"=== {name} ===")
+        try:
+            func(args, config)
+        except FileNotFoundError as e:
+            print(f"Skipped — {e}")
+        print()
 
 
 def cmd_replay(args, config):
@@ -341,11 +385,12 @@ def cmd_replay(args, config):
     if replay_type in ("all", "stats"):
         print("\n=== Stats Replay ===")
         no_charts = getattr(args, "no_charts", False)
+        exclude_paths = config.get("stats_exclude_paths", [])
         repos = get_repo_list(args, config)
         if len(repos) > 1:
-            daily = collect_multi_repo_daily_stats(repos, project)
+            daily = collect_multi_repo_daily_stats(repos, project, exclude_paths=exclude_paths)
         else:
-            daily = collect_daily_stats(repos[0]["path"], project)
+            daily = collect_daily_stats(repos[0]["path"], project, exclude_paths=exclude_paths)
         total_days = len(daily)
         print(f"  Found {total_days} development days")
 
@@ -437,7 +482,7 @@ def main():
     )
     parser.add_argument(
         "command",
-        choices=["roadmap", "release", "changelog", "stats", "all", "replay", "delete-last", "clear-all", "setup-channels"],
+        choices=["roadmap", "release", "changelog", "stats", "confluence", "all", "replay", "delete-last", "clear-all", "setup-channels"],
         help="What to post",
     )
     parser.add_argument("count", nargs="?", help="For delete-last: number of messages to delete")
@@ -465,6 +510,7 @@ def main():
         "release": cmd_release,
         "changelog": cmd_changelog,
         "stats": cmd_stats,
+        "confluence": cmd_confluence,
         "all": cmd_all,
         "replay": cmd_replay,
         "delete-last": cmd_delete_last,

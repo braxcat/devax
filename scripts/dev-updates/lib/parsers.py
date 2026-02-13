@@ -1,11 +1,12 @@
 """
-Markdown file parsers for ROADMAP.md, CHANGELOG.md, and FEATURES.md.
+Markdown file parsers for ROADMAP.md, CHANGELOG.md, FEATURES.md, and Confluence status.
 
 All parsers take a repo_path and construct file paths from it.
 """
 
 import os
 import re
+import subprocess
 from collections import OrderedDict
 from datetime import date, datetime
 
@@ -274,4 +275,115 @@ def parse_features(repo_path):
         "sections": feature_sections,
         "total_sections": len(feature_sections),
         "coming_soon": coming_soon,
+    }
+
+
+def parse_confluence_status(repo_path):
+    """Parse Confluence mirror directory for sync status.
+
+    Walks docs/business/confluence/ and counts .md files per subdirectory.
+    Also checks git log for recent changes.
+
+    Returns:
+        {
+            "total_pages": int,
+            "spaces": [{"name": str, "count": int, "recent_changes": int}],
+            "recent_commits": [{"hash": str, "date": str, "subject": str}],
+            "confluence_dir": str
+        }
+    """
+    confluence_dir = os.path.join(repo_path, "docs", "business", "confluence")
+    if not os.path.isdir(confluence_dir):
+        return {
+            "total_pages": 0,
+            "spaces": [],
+            "recent_commits": [],
+            "confluence_dir": confluence_dir,
+        }
+
+    # Count .md files per subdirectory (space)
+    spaces = {}
+    total = 0
+    for root, _dirs, files in os.walk(confluence_dir):
+        md_files = [f for f in files if f.endswith(".md")]
+        if not md_files:
+            continue
+        # Get relative path from confluence dir to determine space name
+        rel = os.path.relpath(root, confluence_dir)
+        space_name = rel.split(os.sep)[0] if rel != "." else "(root)"
+        spaces.setdefault(space_name, 0)
+        spaces[space_name] += len(md_files)
+        total += len(md_files)
+
+    # Get recent git commits touching the confluence directory
+    recent_commits = []
+    try:
+        result = subprocess.run(
+            [
+                "git", "log",
+                "--since=7 days ago",
+                "--format=%H|%ad|%s",
+                "--date=format:%Y-%m-%d",
+                "--", "docs/business/confluence/",
+            ],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            for line in result.stdout.strip().split("\n"):
+                if not line.strip():
+                    continue
+                parts = line.split("|", 2)
+                if len(parts) == 3:
+                    recent_commits.append({
+                        "hash": parts[0][:8],
+                        "date": parts[1],
+                        "subject": parts[2],
+                    })
+    except FileNotFoundError:
+        pass  # git not available
+
+    # Count recent changes per space from git log
+    recent_by_space = {}
+    try:
+        result = subprocess.run(
+            [
+                "git", "log",
+                "--since=7 days ago",
+                "--name-only",
+                "--format=",
+                "--", "docs/business/confluence/",
+            ],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            for line in result.stdout.strip().split("\n"):
+                line = line.strip()
+                if not line or not line.endswith(".md"):
+                    continue
+                # Extract space from path: docs/business/confluence/<space>/...
+                parts = line.split("/")
+                if len(parts) >= 4:
+                    space = parts[3]
+                    recent_by_space[space] = recent_by_space.get(space, 0) + 1
+    except FileNotFoundError:
+        pass
+
+    space_list = [
+        {
+            "name": name,
+            "count": count,
+            "recent_changes": recent_by_space.get(name, 0),
+        }
+        for name, count in sorted(spaces.items())
+    ]
+
+    return {
+        "total_pages": total,
+        "spaces": space_list,
+        "recent_commits": recent_commits,
+        "confluence_dir": confluence_dir,
     }

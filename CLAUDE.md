@@ -53,6 +53,17 @@ To install Devax in a container environment:
 | `/devax-post-update` | Post progress updates to Slack channels |
 | `/devax-publish` | Publish sanitized devax to public repo |
 
+<!-- BUSINESS:START -->
+### Business Skills (Bosun)
+
+| Skill | Description |
+|-------|-------------|
+| `/bosun-scaffold` | Create `docs/business/` structure with business claude_docs/ |
+| `/bosun-confluence-push` | Push local markdown changes to Confluence wiki |
+| `/bosun-confluence-pull` | Pull latest pages from Confluence to local mirror |
+| `/bosun-post-update` | Post business progress to Slack (roadmap, releases, changelog, stats, confluence) |
+| `/bosun-wrap-session` | End-of-session cleanup for business work |
+<!-- BUSINESS:END -->
 
 ## Scripts
 

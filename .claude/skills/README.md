@@ -34,6 +34,17 @@ All skills here are hand-written for this workspace — none are downloaded from
 | `/devax-post-update` | Post progress to Slack (roadmap, releases, changelog, stats) | `scripts/dev-updates/dev_updates.py` |
 | `/devax-publish` | Publish sanitized devax to public repo | `scripts/publish.sh` |
 
+<!-- BUSINESS:START -->
+### Business (Bosun)
+
+| Skill | Description | Script/Action |
+|-------|-------------|---------------|
+| `/bosun-scaffold` | Scaffold `docs/business/` structure (8 business doc files) | Creates files, updates CLAUDE.md |
+| `/bosun-confluence-push` | Push local markdown to Confluence wiki | `scripts/confluence-sync/sync.py push` |
+| `/bosun-confluence-pull` | Pull latest from Confluence to local mirror | `scripts/confluence-sync/sync.py pull` |
+| `/bosun-post-update` | Post business progress to Slack (5 post types) | `scripts/dev-updates/dev_updates.py --config config-bosun.json` |
+| `/bosun-wrap-session` | End-of-session cleanup for business work | Updates business docs + commit + Slack |
+<!-- BUSINESS:END -->
 
 ## Adding New Skills
 

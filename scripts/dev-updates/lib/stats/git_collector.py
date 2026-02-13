@@ -265,11 +265,50 @@ def _build_daily_stats(all_commits, project_name, include_tags=False):
     return daily_stats
 
 
+def _filter_excluded_paths(commits: list, exclude_paths: list) -> list:
+    """Filter out commits where ALL changed files match an exclude path.
+
+    Commits with at least one file outside the excluded paths are kept,
+    but the excluded files are removed from the commit's file list and
+    line counts are recalculated.
+    """
+    if not exclude_paths:
+        return commits
+
+    filtered = []
+    for c in commits:
+        files = c.get("files", [])
+        if not files:
+            filtered.append(c)
+            continue
+
+        kept_files = [
+            f for f in files
+            if not any(f.startswith(ep) for ep in exclude_paths)
+        ]
+
+        if not kept_files:
+            continue  # All files excluded — drop entire commit
+
+        if len(kept_files) < len(files):
+            # Some files excluded — we keep the commit but can't easily
+            # recalculate line counts per file (numstat doesn't tag lines
+            # per file in our parsed data). Keep the commit as-is since
+            # the excluded paths are typically docs with minimal churn.
+            c = dict(c)
+            c["files"] = kept_files
+
+        filtered.append(c)
+
+    return filtered
+
+
 def collect_daily_stats(
     repo_path: str,
     project_name: str = "My Project",
     timezone: str = "Australia/Sydney",
     workspace_repo: str = None,
+    exclude_paths: list = None,
 ) -> list:
     """Extract per-day stats from a single git repository.
 
@@ -282,9 +321,14 @@ def collect_daily_stats(
         timezone: Timezone for git log timestamps.
         workspace_repo: Name of the workspace/planning repo for path-based
             classification. If None, all commits are tagged with the repo name.
+        exclude_paths: List of path prefixes to exclude from stats
+            (e.g. ["docs/business/confluence/"]).
     """
     commits = _parse_git_log(repo_path, timezone)
     repo_name = os.path.basename(os.path.normpath(repo_path))
+
+    # Filter excluded paths before classification
+    commits = _filter_excluded_paths(commits, exclude_paths or [])
 
     # Tag each commit
     for c in commits:
@@ -303,6 +347,7 @@ def collect_multi_repo_daily_stats(
     project_name: str = "My Project",
     timezone: str = "Australia/Sydney",
     workspace_repo: str = None,
+    exclude_paths: list = None,
 ) -> list:
     """Extract per-day stats from multiple git repositories, merged into one timeline.
 
@@ -312,6 +357,7 @@ def collect_multi_repo_daily_stats(
         timezone: Timezone for git log.
         workspace_repo: Name of the workspace/planning repo for path-based
             classification. If None, all commits are tagged with their repo name.
+        exclude_paths: List of path prefixes to exclude from stats.
 
     Returns a list of daily stats dicts (chronologically ordered) with
     commit_tags and project_tags showing the breakdown.
@@ -321,6 +367,7 @@ def collect_multi_repo_daily_stats(
         repo_path = repo["path"]
         repo_name = repo["name"]
         commits = _parse_git_log(repo_path, timezone)
+        commits = _filter_excluded_paths(commits, exclude_paths or [])
         for c in commits:
             c["commit_type"] = _classify_commit(c["subject"])
             c["project_tag"] = _classify_project(repo_name, c.get("files", []), workspace_repo)

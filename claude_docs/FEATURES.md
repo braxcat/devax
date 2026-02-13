@@ -36,6 +36,22 @@
 
 ---
 
+<!-- BUSINESS:START -->
+## Claude Code Skills — Business (Bosun)
+
+**What it does:** Custom slash commands for business operations, branded as Bosun (aka Boats)
+
+**Available skills:**
+- `/bosun-scaffold` — Create `docs/business/` workspace with 8 business orientation files
+- `/bosun-confluence-push` — Push local markdown changes to Confluence wiki
+- `/bosun-confluence-pull` — Pull latest Confluence pages to local mirror
+- `/bosun-post-update` — Post business progress to Slack (roadmap, releases, changelog, stats, confluence)
+- `/bosun-wrap-session` — End-of-session cleanup for business work (docs + Confluence + commit + memory + Slack)
+
+**Location:** `.claude/skills/` (same directory, excluded from public publish)
+
+**Slack channels:** `bosun-roadmap`, `bosun-releases`, `bosun-changelog`, `bosun-confluence`, `coding-stats-new` (shared)
+<!-- BUSINESS:END -->
 
 ---
 

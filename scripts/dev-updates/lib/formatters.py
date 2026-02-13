@@ -1,13 +1,16 @@
 """
 Block Kit message builders for Slack.
 
-Three post types:
-- Roadmap progress  → #dev-roadmap
-- Release notes     → #dev-releases
-- Changelog         → #dev-changelog
+Post types:
+- Roadmap progress     → #dev-roadmap
+- Release notes        → #dev-releases
+- Changelog            → #dev-changelog
+- Confluence sync      → #dev-confluence
 
 Dates use friendly format: "Feb 8" (not "2026-02-08") for international clarity.
 """
+
+from datetime import date
 
 
 # ─── Block helpers ───
@@ -234,5 +237,62 @@ def build_changelog_blocks(data, project_name, context="deploy"):
         blocks.append(
             _context_block(f"Previous: {prev['name']} — {prev_date}")
         )
+
+    return blocks
+
+
+# ─── Confluence ───
+
+
+def build_confluence_blocks(data, project_name, context="deploy"):
+    """Build Block Kit blocks for Confluence sync status post.
+
+    context: "deploy" (default), "session", or "wrap" — controls the header text.
+    """
+    blocks = []
+
+    if context == "wrap":
+        header = f"📚 {project_name} — Confluence Activity"
+    elif context == "session":
+        header = f"📚 {project_name} — Confluence Status"
+    else:
+        header = f"📚 {project_name} — Confluence Sync"
+    blocks.append(_header_block(header))
+
+    today = date.today().strftime("%b %-d")
+    blocks.append(_context_block(f"Wiki mirror status · {today}"))
+
+    blocks.append(_divider())
+
+    total = data.get("total_pages", 0)
+    spaces = data.get("spaces", [])
+
+    if total == 0:
+        blocks.append(_section_block("No Confluence pages found in mirror."))
+        return blocks
+
+    # Summary stats
+    space_lines = []
+    for s in spaces:
+        recent = f" ({s['recent_changes']} changed)" if s["recent_changes"] > 0 else ""
+        space_lines.append(f"• *{s['name']}*: {s['count']} pages{recent}")
+
+    blocks.append(_section_block(
+        f"*📊 Mirror Summary*\n"
+        f"Total pages: *{total}*\n\n"
+        + "\n".join(space_lines)
+    ))
+
+    # Recent commits
+    commits = data.get("recent_commits", [])
+    if commits:
+        blocks.append(_divider())
+        commit_lines = [f"• `{c['hash']}` {c['subject']} ({c['date']})" for c in commits[:8]]
+        blocks.append(_section_block(
+            f"*🔄 Recent Changes (7 days)*\n" + "\n".join(commit_lines)
+        ))
+    else:
+        blocks.append(_divider())
+        blocks.append(_section_block("_No changes in the last 7 days_"))
 
     return blocks
