@@ -97,7 +97,24 @@ Show the proposed memory updates to the user before writing.
 
 Keep MEMORY.md concise — it auto-loads into every conversation's context. Link to separate topic files for detailed notes.
 
-### 6. Post to Slack
+### 6. Sync devax skill lists
+
+Check if the devax README.md and CLAUDE.md skill tables match the actual skill files on disk.
+
+**How to check:**
+1. List all directories in `.claude/skills/` (each directory = one skill, ignore README.md)
+2. Compare against the skill tables in `infra/devax/README.md` and `infra/devax/CLAUDE.md`
+3. If any skill is missing from either file, or any listed skill doesn't have a file, flag the drift
+
+**If drift is found:**
+- Show the user which skills are missing or stale
+- Propose edits to both files
+- Apply after user approval
+- **README.md is public** — never add Bosun/business skills to it (those are behind BUSINESS markers in CLAUDE.md only)
+
+**If no drift:** Say "Devax skill lists in sync" and move on.
+
+### 7. Post to Slack
 
 If the user said `/wrap-session quick`, skip this step.
 
@@ -105,7 +122,7 @@ Check if `SLACK_BOT_TOKEN` is set:
 - If yes, ask: "Post updates to Slack?" If approved, run `/devax-post-update all` with `--context wrap` so Slack messages show wrap-specific headings (e.g. "Session Wrap", "Session Changes")
 - If not set, remind the user they can run `/devax-post-update all --context wrap` later
 
-### 7. Summary
+### 8. Summary
 
 Report everything that happened:
 - Docs updated (list which ones, or "none needed")

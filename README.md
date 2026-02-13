@@ -26,12 +26,19 @@ ln -s /path/to/container/infra/devax/templates templates
 
 ## Skills Provided
 
-- `/devax-scaffold-docs` - Create claude_docs/ structure in any project
-- `/devax-deploy` - Deploy to GCP Cloud Run + update docs + post to Slack
-- `/devax-wrap-session` - End-of-session cleanup — docs + commit + push + memory + Slack
-- `/devax-update-docs` - Update documentation after work session (no deploy)
-- `/devax-post-update` - Post progress updates to Slack channels
-- `/devax-publish` - Publish sanitized devax to public repo
+| Skill | Description |
+|-------|-------------|
+| `/devax-scaffold-docs` | Create `claude_docs/` structure in any project |
+| `/devax-deploy` | Deploy to GCP Cloud Run + update docs + post to Slack |
+| `/devax-wrap-session` | End-of-session cleanup — docs + commit + push + memory + Slack |
+| `/devax-update-docs` | Update documentation after work session (no deploy) |
+| `/devax-update-user-docs` | Update user documentation (MDX) based on code changes |
+| `/devax-post-update` | Post progress updates to Slack channels |
+| `/devax-publish` | Publish sanitized devax to public repo |
+| `/devax-code-review` | Comprehensive code review (8 quality + 4 security categories) |
+| `/devax-stats` | Project statistics and dev metrics (codebase, git, time estimate) |
+| `/devax-test-scaffold` | Set up Vitest + RTL test infrastructure in a Next.js project |
+| `/devax-test-create` | Generate tests for existing code (tier1/tier2/tier3 or specific files) |
 
 ## Portfolio Organization
 
