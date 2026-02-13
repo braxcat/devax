@@ -33,6 +33,8 @@ All skills here are hand-written for this workspace — none are downloaded from
 | `/devax-wrap-session` | End-of-session cleanup — docs + commit + push + memory + Slack | Full session wrap-up |
 | `/devax-post-update` | Post progress to Slack (roadmap, releases, changelog, stats) | `scripts/dev-updates/dev_updates.py` |
 | `/devax-publish` | Publish sanitized devax to public repo | `scripts/publish.sh` |
+| `/devax-code-review` | Comprehensive code review (8 quality + 4 security categories) | Inline analysis → `claude_docs/CODE-REVIEW.md` |
+| `/devax-stats` | Project statistics and dev metrics (codebase, git, time estimate) | Inline analysis + optional `scripts/dev-time-report.sh` |
 
 <!-- BUSINESS:START -->
 ### Business (Bosun)

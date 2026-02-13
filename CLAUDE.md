@@ -52,6 +52,8 @@ To install Devax in a container environment:
 | `/devax-update-docs` | Update documentation after work session (no deploy) |
 | `/devax-post-update` | Post progress updates to Slack channels |
 | `/devax-publish` | Publish sanitized devax to public repo |
+| `/devax-code-review` | Comprehensive code review (8 quality + 4 security categories) |
+| `/devax-stats` | Project statistics and dev metrics (codebase, git, time estimate) |
 
 <!-- BUSINESS:START -->
 ### Business Skills (Bosun)
